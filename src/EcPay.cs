@@ -46,141 +46,94 @@ namespace EcPay
     public class EcPay : EcPayMetadata
     {
         public EcPay() : base() { }
-
-        public IEnumerable<string> Create()//ref Hashtable feedback)
+        private List<string> returnError(List<string> ErrorStrs, string messgae)
         {
-            string empty = string.Empty;
-            string str = string.Empty;
-            string empty1 = string.Empty;
-            List<string> strs = new List<string>();
+            ErrorStrs.Add(messgae);
+            return ErrorStrs;
+        }
+        public IEnumerable<string> Create(ref Dictionary<string,string> feedback)
+        {
+            string serverResult = string.Empty;
+            string queryString = string.Empty;
+            string checkMacValue = string.Empty;
+            List<string> ErrorStrs = new List<string>();
             Dictionary<string, object> keyValues = new System.Collections.Generic.Dictionary<string, object>();
             //放上回應的資料
-            //if (feedback == null)
-            //{
-            //    feedback = new Hashtable();
-            //}
+            if (feedback == null)
+            {
+                feedback = new Dictionary<string,string>();
+            }
             //驗證輸入資料
             //strs.AddRange(ServerValidator.Validate(this));
             //strs.AddRange(ServerValidator.Validate(base.Query));
-            if (strs.Count == 0)
+            if (ErrorStrs.Count > 0) return ErrorStrs;
+            Uri baseUri = new Uri(base.ServiceURL);
+            base.ServiceURL = new Uri(baseUri, @"Express/Create").ToString();
+            keyValues.Add("MerchantID", base.MerchantID);
+            keyValues.Add("MerchantTradeNo", base.Send.MerchantTradeNo);
+            keyValues.Add("MerchantTradeDate", base.Send.MerchantTradeDate);
+            keyValues.Add("LogisticsType", base.Send.LogisticsType);
+            string[] strArrays = base.Send.LogisticsSubType.ToString().Split(new char[] { '\u005F' });
+            switch ((int)strArrays.Length)
             {
-                Uri baseUri = new Uri(base.ServiceURL);
-                base.ServiceURL = new Uri(baseUri, @"Express/Create").ToString();
-                keyValues.Add("MerchantID", base.MerchantID);
-                keyValues.Add("MerchantTradeNo", base.Send.MerchantTradeNo);
-                keyValues.Add("MerchantTradeDate", base.Send.MerchantTradeDate);
-                keyValues.Add("LogisticsType", base.Send.LogisticsType);
-                string[] strArrays = base.Send.LogisticsSubType.ToString().Split(new char[] { '\u005F' });
-                switch ((int)strArrays.Length)
-                {
-                    case 1:
-                        {
-                            keyValues.Add("LogisticsSubType", strArrays[0]);
-                            break;
-                        }
-                    case 2:
-                        {
-                            keyValues.Add("LogisticsSubType", strArrays[1]);
-                            break;
-                        }
-                }
-                keyValues.Add("GoodsAmount", base.Send.GoodsAmount);
-                keyValues.Add("GoodsName", base.Send.GoodsName);
-                keyValues.Add("SenderName", base.Send.SenderName);
-                keyValues.Add("SenderPhone", base.Send.SenderPhone);
-                keyValues.Add("SenderCellPhone", base.Send.SenderCellPhone);
-                keyValues.Add("ReceiverName", base.Send.ReceiverName);
-                keyValues.Add("ReceiverPhone", base.Send.ReceiverPhone);
-                keyValues.Add("ReceiverCellPhone", base.Send.ReceiverCellPhone);
-                keyValues.Add("ReceiverEmail", base.Send.ReceiverEmail);
-                keyValues.Add("TradeDesc", base.Send.TradeDesc);
-                keyValues.Add("ServerReplyURL", base.Send.ServerReplyURL);
-                if (base.Send.LogisticsType == LogisticsType.Home)
-                {
-                    keyValues.Add("SenderZipCode", base.SendExtend.SenderZipCode);
-                    keyValues.Add("SenderAddress", base.SendExtend.SenderAddress);
-                    keyValues.Add("ReceiverZipCode", base.SendExtend.ReceiverZipCode);
-                    keyValues.Add("ReceiverAddress", base.SendExtend.ReceiverAddress);
-                    keyValues.Add("Temperature", string.Format("{0:0000}", (int)base.SendExtend.Temperature));
-                    keyValues.Add("Distance", string.Format("{0:00}", (int)base.SendExtend.Distance));
-                    keyValues.Add("Specification", string.Format("{0:0000}", (int)base.SendExtend.Specification));
-                    keyValues.Add("ScheduledPickupTime", string.Format("{0:0}", (int)base.SendExtend.ScheduledPickupTime));
-                    keyValues.Add("ScheduledDeliveryTime", string.Format("{0:0}", (int)base.SendExtend.ScheduledDeliveryTime));
-                    keyValues.Add("ScheduledDeliveryDate", string.Format("{0:yyyy/MM/dd}", base.SendExtend.ScheduledDeliveryDate));
-                    keyValues.Add("PackageCount", base.SendExtend.PackageCount);
-                }
-                str = genKeyValue(keyValues);
-                empty1 = this.BuildCheckMacValue(str);
-
-                str = string.Concat(str, this.BuildParamenter("CheckMacValue", empty1));
-                str = str.Substring(1);
-                // DateTime now = DateTime.Now;
-                // Logger.WriteLine(string.Format("INFO   {0}  OUTPUT  AllInOne.QueryTradeInfo: {1}", now.ToString("yyyy-MM-dd HH:mm:ss"), str));
-                if (base.ServiceMethod == HttpMethod.ServerPOST)
-                {
-                    empty = this.ServerPost(str);
-                }
-                else //if (base.ServiceMethod != HttpMethod.HttpSOAP)
-                {
-                    strs.Add("No service for HttpPOST and HttpGET.");
-                }
-                if (!string.IsNullOrEmpty(empty))
-                {
-                    if (!empty.StartsWith("1"))
-                        strs.Add("Error");
-                }
-                //檢查回傳資料
-                // DateTime dateTime = DateTime.Now;
-                // Logger.WriteLine(string.Format("INFO   {0}  INPUT   AllInOne.QueryTradeInfo: {1}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), empty));
-                //if (!string.IsNullOrEmpty(empty))
-                //{
-                //    str = string.Empty;
-                //    empty1 = string.Empty;
-                //    string[] strArrays = empty.Split(new char[] { '&' });
-                //    for (int i = 0; i < (int)strArrays.Length; i++)
-                //    {
-                //        string str1 = strArrays[i];
-                //        if (!string.IsNullOrEmpty(str1))
-                //        {
-                //            string[] strArrays1 = str1.Split(new char[] { '=' });
-                //            string str2 = strArrays1[0];
-                //            string str3 = strArrays1[1];
-                //            if (str2 == "CheckMacValue")
-                //            {
-                //                empty1 = str3;
-                //            }
-                //            else
-                //            {
-                //                str = string.Concat(str, string.Format("&{0}={1}", str2, str3));
-                //                if (str2 == "PaymentType")
-                //                {
-                //                    str3 = str3.Replace("_CVS", string.Empty);
-                //                    str3 = str3.Replace("_BARCODE", string.Empty);
-                //                    str3 = str3.Replace("_Alipay", string.Empty);
-                //                    str3 = str3.Replace("_Tenpay", string.Empty);
-                //                    str3 = str3.Replace("_CreditCard", string.Empty);
-                //                }
-                //                if (str2 == "PeriodType")
-                //                {
-                //                    str3 = str3.Replace("Y", "Year");
-                //                    str3 = str3.Replace("M", "Month");
-                //                    str3 = str3.Replace("D", "Day");
-                //                }
-                //                feedback.Add(str2, str3);
-                //            }
-                //        }
-                //    }
-                //    if (!string.IsNullOrEmpty(empty1))
-                //    {
-                //        strs.AddRange(this.CompareCheckMacValue(str, empty1));
-                //    }
-                //    else
-                //    {
-                //        strs.Add(string.Format("ErrorCode: {0}", feedback["TradeStatus"]));
-                //    }
-                //}
+                case 1:
+                    {
+                        keyValues.Add("LogisticsSubType", strArrays[0]);
+                        break;
+                    }
+                case 2:
+                    {
+                        keyValues.Add("LogisticsSubType", strArrays[1]);
+                        break;
+                    }
             }
-            return strs;
+            keyValues.Add("GoodsAmount", base.Send.GoodsAmount);
+            keyValues.Add("GoodsName", base.Send.GoodsName);
+            keyValues.Add("SenderName", base.Send.SenderName);
+            keyValues.Add("SenderPhone", base.Send.SenderPhone);
+            keyValues.Add("SenderCellPhone", base.Send.SenderCellPhone);
+            keyValues.Add("ReceiverName", base.Send.ReceiverName);
+            keyValues.Add("ReceiverPhone", base.Send.ReceiverPhone);
+            keyValues.Add("ReceiverCellPhone", base.Send.ReceiverCellPhone);
+            keyValues.Add("ReceiverEmail", base.Send.ReceiverEmail);
+            keyValues.Add("TradeDesc", base.Send.TradeDesc);
+            keyValues.Add("ServerReplyURL", base.Send.ServerReplyURL);
+            if (base.Send.LogisticsType == LogisticsType.Home)
+            {
+                keyValues.Add("SenderZipCode", base.SendExtend.SenderZipCode);
+                keyValues.Add("SenderAddress", base.SendExtend.SenderAddress);
+                keyValues.Add("ReceiverZipCode", base.SendExtend.ReceiverZipCode);
+                keyValues.Add("ReceiverAddress", base.SendExtend.ReceiverAddress);
+                keyValues.Add("Temperature", string.Format("{0:0000}", (int)base.SendExtend.Temperature));
+                keyValues.Add("Distance", string.Format("{0:00}", (int)base.SendExtend.Distance));
+                keyValues.Add("Specification", string.Format("{0:0000}", (int)base.SendExtend.Specification));
+                keyValues.Add("ScheduledPickupTime", string.Format("{0:0}", (int)base.SendExtend.ScheduledPickupTime));
+                keyValues.Add("ScheduledDeliveryTime", string.Format("{0:0}", (int)base.SendExtend.ScheduledDeliveryTime));
+                keyValues.Add("ScheduledDeliveryDate", string.Format("{0:yyyy/MM/dd}", base.SendExtend.ScheduledDeliveryDate));
+                keyValues.Add("PackageCount", base.SendExtend.PackageCount);
+            }
+            queryString = genKeyValue(keyValues);
+            checkMacValue = this.BuildCheckMacValue(queryString);
+
+            queryString = string.Concat(queryString, this.BuildParamenter("CheckMacValue", checkMacValue));
+            queryString = queryString.Substring(1);
+            // DateTime now = DateTime.Now;
+            // Logger.WriteLine(string.Format("INFO   {0}  OUTPUT  AllInOne.QueryTradeInfo: {1}", now.ToString("yyyy-MM-dd HH:mm:ss"), str));
+            if (base.ServiceMethod != HttpMethod.ServerPOST)
+                return this.returnError(ErrorStrs, "No service for HttpPOST and HttpGET.");
+            serverResult = this.ServerPost(queryString);
+            if (string.IsNullOrEmpty(serverResult) || !serverResult.StartsWith("1|"))
+                return this.returnError(ErrorStrs, string.Format("Server Error:{0}", serverResult ?? ""));
+
+
+            feedback = serverResult.Substring(2).Split(new char[] { '&' }).ToList().Select(keyValueString =>
+            {
+                var keyValueStrings = keyValueString.Split(new char[] { '=' });
+                return new { Key = keyValueStrings[0], Value = keyValueStrings[1] };
+            }).ToDictionary(k => k.Key, v => v.Value);
+
+
+            return ErrorStrs;
         }
 
 
