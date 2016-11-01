@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EcPay
+namespace EcPay.Payment.Integration
 {
     public enum LogisticsType
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EcPay
+namespace EcPay.Payment.Integration
 {
     public class EcPayMetadata: AllPay.Payment.Integration.CommonMetadata
     {

@@ -17,7 +17,7 @@ using System.Threading;
 using System.Web;
 using System.Security.Cryptography;
 using AllPay.Payment.Integration;
-namespace EcPay
+namespace EcPay.Payment.Integration
 {
     internal static class MD5Encoder
     {
@@ -41,7 +41,7 @@ namespace EcPay
         }
     }
 }
-namespace EcPay
+namespace EcPay.Payment.Integration
 {
     public class EcPay : EcPayMetadata
     {
